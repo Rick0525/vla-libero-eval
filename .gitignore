@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ML artifacts — too large for git
+checkpoints/
+outputs/
+wandb/
+*.safetensors
+*.pt
+*.ckpt
+
+# Rollout videos (curated clips go to GitHub Releases, not git)
+videos/
+*.mp4
+*.gif
+
+# Logs
+logs/
+*.log
+
+# Local-only configs (machine-specific paths, never committed)
+.env
+*.local.sh
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
