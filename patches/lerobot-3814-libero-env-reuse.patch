@@ -1,0 +1,19 @@
+# Workaround for lerobot issue #3814 (fix PRs #3837/#3841, not yet released
+# as of lerobot 0.6.0): LIBERO's ControlEnv.close() deletes its inner env
+# attribute, but LiberoEnv._ensure_env() only checks `self._env is not None`,
+# so the second in-training eval round reuses a gutted wrapper and crashes
+# with: AttributeError: 'OffScreenRenderEnv' object has no attribute 'env'.
+#
+# Apply to: site-packages/lerobot/envs/libero.py (LiberoEnv.close)
+# Remove once the upstream fix ships in a lerobot release.
+--- a/lerobot/envs/libero.py
++++ b/lerobot/envs/libero.py
+@@ -380,3 +380,8 @@
+     def close(self):
+         if self._env is not None:
+             self._env.close()
++            # Local patch (upstream lerobot issue #3814, PRs #3837/#3841):
++            # LIBERO ControlEnv.close() deletes its inner env attribute, so a closed
++            # wrapper must not be reused. Reset the handle so _ensure_env()
++            # recreates it on the next eval round.
++            self._env = None
