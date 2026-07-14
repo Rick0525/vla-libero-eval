@@ -5,8 +5,9 @@
 ## 当前状态：W1 D2（2026-07-14）
 
 - [x] 仓库脚手架：git init、MIT、双语 README、.gitignore（2026-07-14）
-- [ ] SmolVLA（smolvla_base，微调前）LIBERO-Spatial baseline 评测
-- [ ] SmolVLA LoRA 微调（libero_spatial）+ 第一条成功率曲线
+- [x] SmolVLA（smolvla_base，微调前）baseline：**N/A，结构性不可评**，证据见 `results/smolvla_base_zero_shot.md`（2026-07-14，Rick 拍板方案一）
+- [x] 评测脚本 `scripts/eval_smolvla_base_spatial.sh`（管线已验证到策略加载；踩坑修复固化在服务器 env 脚本）
+- [ ] SmolVLA LoRA 微调（libero_spatial）+ 第一条成功率曲线 ← 进行中
 
 ## 环境事实（服务器侧，已验证）
 
