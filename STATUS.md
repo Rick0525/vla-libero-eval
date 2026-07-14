@@ -7,7 +7,8 @@
 - [x] 仓库脚手架：git init、MIT、双语 README、.gitignore（2026-07-14）
 - [x] SmolVLA（smolvla_base，微调前）baseline：**N/A，结构性不可评**，证据见 `results/smolvla_base_zero_shot.md`（2026-07-14，Rick 拍板方案一）
 - [x] 评测脚本 `scripts/eval_smolvla_base_spatial.sh`（管线已验证到策略加载；踩坑修复固化在服务器 env 脚本）
-- [ ] SmolVLA LoRA 微调（libero_spatial）+ 第一条成功率曲线 ← 进行中
+- [~] SmolVLA 微调（libero_spatial）**训练中**（2026-07-14 12:11 启动，官方配方全参，100k 步预计 12–16h）——LoRA 不可行（PEFT 需完整预训练策略 + smolvla_base IO 不匹配），改官方配方：预训练 VLM 底座 + 从零 action expert
+- [ ] 第一条成功率曲线（每 1000 步一个点，libero_spatial 10 eps/点）
 
 ## 环境事实（服务器侧，已验证）
 

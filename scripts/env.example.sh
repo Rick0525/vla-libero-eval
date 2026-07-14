@@ -3,5 +3,6 @@
 
 export VLA_MODELS_DIR=/path/to/models          # contains smolvla_base/, openvla-oft-*/, ...
 export VLA_EVAL_OUTPUT_DIR=/path/to/eval_runs  # evaluation outputs (json, videos)
+export VLA_TRAIN_OUTPUT_DIR=/path/to/train_runs # training outputs (checkpoints, curves)
 export HF_LEROBOT_HOME=/path/to/datasets       # LeRobot dataset root (repo_id layout)
 export MUJOCO_GL=egl                           # headless rendering on servers
