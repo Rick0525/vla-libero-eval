@@ -2,21 +2,37 @@
 
 > 更新规则：进度一变就更新本文件（CLAUDE.md 约定）。
 
-## 当前状态：W1 D2（2026-07-14）
+## 当前状态：W1 D7（2026-07-20 凌晨）
 
-- [x] 仓库脚手架：git init、MIT、双语 README、.gitignore（2026-07-14）
-- [x] SmolVLA（smolvla_base，微调前）baseline：**N/A，结构性不可评**，证据见 `results/smolvla_base_zero_shot.md`（2026-07-14，Rick 拍板方案一）
-- [x] 评测脚本 `scripts/eval_smolvla_base_spatial.sh`（管线已验证到策略加载；踩坑修复固化在服务器 env 脚本）
-- [~] SmolVLA 微调（libero_spatial）**训练中**（2026-07-14 12:11 启动，官方配方全参，100k 步预计 12–16h）——LoRA 不可行（PEFT 需完整预训练策略 + smolvla_base IO 不匹配），改官方配方：预训练 VLM 底座 + 从零 action expert
-- [ ] 第一条成功率曲线（每 1000 步一个点，libero_spatial 10 eps/点）
+**头条：SmolVLA(0.45B, VLM-init) 微调 libero_spatial 成功率 82.0%**（n_action_steps=1 × 100 episodes，官方协议，seed 1000；论文参考值 90，95% CI ±7.5pp）
+
+- [x] 仓库脚手架：git init、MIT、双语 README、.gitignore（07-14）
+- [x] smolvla_base zero-shot baseline：**N/A，结构性不可评**，证据见 `results/smolvla_base_zero_shot.md`（07-14）
+- [x] 首次微调（lerobot 文档示例配方：batch 4 / 100k 步 / 内联评测 n=50）：跑完但仅 **43%**（07-14 启动，07-19 归因），三重根因：①评测口径 n_action_steps=50（论文 Table 13：该口径砍 ~35pp）②batch 4 vs 论文 64（样本量差 16 倍）③lr 调度 30k 步即触底、后 70% 步数近乎白跑
+- [x] 基线重评（n=1×100，官方口径）：ckpt60k=38% / ckpt100k=**43%**（07-20 凌晨）
+- [x] **重训（论文对齐配方：全局 batch 64 双卡 DDP / bf16 / 30k 步与 lr 调度对齐 / 无内联评测）**：4h02m 完成，loss 0.434→0.237，**82.0%**（07-20 04:07 训毕，04:47 评毕）
+- [x] 成功率曲线（评测 daemon 于独立 GPU 出分，n=10 × 50 eps/点）：5k=52 → 10k=48 → 15k=72 → 20k=68 → 25k=74 → 30k=74
+- [~] 最佳 checkpoint 甄别：25k 与 30k 曲线口径打平，25k 的 n=1×100 正式评测进行中
+- [ ] 结果正式化：results/ 下补微调 report（涨点叙事 + 失败任务归因，task5 仅 2/10、task8 6/10，视频素材已落盘）
+
+## 脚本清单
+
+- `scripts/train_smolvla_spatial.sh` — 首次微调用（文档示例配方，留档对照）
+- `scripts/train_smolvla_spatial_b64.sh` — **论文对齐配方**（accelerate DDP + bf16；含两处环境 workaround，注释内有据：NCCL_P2P_DISABLE、TORCHDYNAMO_DISABLE）
+- `scripts/eval_checkpoint_spatial.sh` — checkpoint 评测（n_action_steps / batch / episodes / task_ids 全部参数化）
+- `scripts/eval_daemon_spatial.sh` — 评测 daemon：盯 checkpoint 目录自动出曲线（训练/评测分卡解耦）
+- `scripts/eval_smolvla_base_spatial.sh` — zero-shot 尝试留档
 
 ## 环境事实（服务器侧，已验证）
 
 - conda `py312_lerobot`：lerobot 0.6.0 / torch 2.11.0+cu126 / mujoco 3.8.1 / peft 0.19.1，EGL headless 渲染冒烟通过
-- 权重与数据集已全部就位并逐文件验收（2026-07-14 晨）
 - ⚠️ 服务器上跑任何 lerobot 命令前先 `source scripts/env.sh`（HF 缓存/数据集路径重定向）——env.sh 含机器路径，不入库
+- ⚠️ 2026-07-19 服务器驱动 535→595 后：GPU0↔GPU1 PCIe P2P 挂死（NCCL 须 `NCCL_P2P_DISABLE=1`）；Triton/inductor kernel 训练期间歇性 illegal memory access（须 `TORCHDYNAMO_DISABLE=1`，lerobot SmolVLA 有硬编码内部 compile）——均已固化进脚本/env.local.sh，详见 VLA_Lab notes/W1.md 踩坑表
+- 评测注意：`--eval.batch_size` 在 LIBERO 上无实际加速（环境串行）；`--env.max_parallel_tasks>1` 线程池共享 policy 状态，勿用
 
 ## 决策记录
 
+- 2026-07-19：重训配方 Rick 拍板——batch 64（32×2 DDP）、30k 步（与 lr 调度对齐，论文明言步数可大减）、bf16；训练/评测分卡（GPU0+1 训、GPU2 评）；best checkpoint = 全量保留周期 checkpoint + daemon 曲线事后选优
+- 2026-07-19：评测口径 Rick 拍板——正式数字用 n_action_steps=1 × 100 eps（论文仿真协议）；曲线用 n=10（论文 Table 13 示 n=10≈n=1）
 - 2026-07-14：repo 今日启用 git；GitHub 私有仓先行，W7 打磨后转公开；MIT；commit 由 Claude 代打、Rick review
 - 2026-07-13：baseline 从 libero_spatial 开刀（论文参考值最高、最易复现），libero_10 最后碰
