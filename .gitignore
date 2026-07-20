@@ -18,6 +18,9 @@ videos/
 *.mp4
 *.gif
 
+# Raw eval dumps (contain server-side paths; tables in results/*.md instead)
+results/raw/
+
 # Logs
 logs/
 *.log
