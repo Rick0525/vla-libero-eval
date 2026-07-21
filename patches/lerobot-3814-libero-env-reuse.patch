@@ -8,7 +8,7 @@
 # Remove once the upstream fix ships in a lerobot release.
 --- a/lerobot/envs/libero.py
 +++ b/lerobot/envs/libero.py
-@@ -380,3 +380,8 @@
+@@ -380,6 +380,11 @@
      def close(self):
          if self._env is not None:
              self._env.close()
@@ -17,3 +17,6 @@
 +            # wrapper must not be reused. Reset the handle so _ensure_env()
 +            # recreates it on the next eval round.
 +            self._env = None
+ 
+ 
+ def _make_env_fns(
