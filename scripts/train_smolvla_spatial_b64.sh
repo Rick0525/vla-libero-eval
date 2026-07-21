@@ -24,13 +24,14 @@ NUM_GPUS="${NUM_GPUS:-2}"
 OUTPUT_DIR="${VLA_TRAIN_OUTPUT_DIR:?set VLA_TRAIN_OUTPUT_DIR}/smolvla_spatial_${RUN_TAG}"
 export MUJOCO_GL="${MUJOCO_GL:-egl}"
 
-# 2026-07-20: lerobot's SmolVLA hard-wires an inner torch.compile
-# (modeling_smolvla.py:787, independent of --policy.compile_model), and its
-# inductor/Triton kernels intermittently crash with "illegal memory access"
-# under driver 595 during training (aot_autograd path; inference is fine).
-# Disabling dynamo globally falls everything back to eager. Revisit on the
-# next driver/torch change.
-export TORCHDYNAMO_DISABLE="${TORCHDYNAMO_DISABLE:-1}"
+# 2026-07-21 re-test on CUDA-13 torch (2.11.0+cu130) after the IOMMU fix:
+#   - dynamo ON (SmolVLA's inner hard-wired torch.compile): 600-step DDP probe
+#     clean at 3.49 step/s (updt_s 0.279 / data_s 0.009) -> re-enabled.
+#   - outer --policy.compile_model=true (max-autotune): still dies in Triton
+#     autotune on sm_80 ("triton_mm Required: 196608 Hardware limit: 166912",
+#     then illegal memory access) -- a torch 2.11 inductor bug, not the driver.
+#     Keep COMPILE=false; revisit on the next torch upgrade.
+export TORCHDYNAMO_DISABLE="${TORCHDYNAMO_DISABLE:-0}"
 
 MULTI_GPU_ARGS=()
 if [[ "${NUM_GPUS}" -gt 1 ]]; then
@@ -46,11 +47,12 @@ accelerate launch \
   --policy.load_vlm_weights=true \
   --policy.push_to_hub=false \
   --policy.device=cuda \
-  --policy.compile_model="${COMPILE:-true}" \
+  --policy.compile_model="${COMPILE:-false}" \
   --dataset.repo_id=HuggingFaceVLA/libero \
   --batch_size="${TRAIN_BATCH_SIZE_PER_GPU:-32}" \
   --steps="${TRAIN_STEPS:-30000}" \
-  --num_workers="${NUM_WORKERS:-16}" \
+  --num_workers="${NUM_WORKERS:-32}" \
+  --prefetch_factor="${PREFETCH_FACTOR:-8}" \
   --log_freq="${LOG_FREQ:-100}" \
   --save_freq="${SAVE_FREQ:-2500}" \
   --seed="${TRAIN_SEED:-1000}" \

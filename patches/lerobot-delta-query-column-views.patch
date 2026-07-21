@@ -1,0 +1,33 @@
+# Local perf patch for lerobot 0.6.0 (also unfixed on upstream main as of
+# 2026-07-21): _query_hf_dataset materializes full rows per delta index,
+# decoding every camera frame just to read a small float column (~200 ms per
+# sample with a 50-step action chunk = 38% of b64 training wall-clock).
+# Cached select_columns views answer the same query in ~0.5 ms (46x per-sample).
+# Validated: 324 samples (incl. 24 episode-boundary) bit-identical outputs.
+# Apply to: site-packages/lerobot/datasets/dataset_reader.py
+# Remove if upstream ships an equivalent fix.
+--- a/lerobot/datasets/dataset_reader.py
++++ b/lerobot/datasets/dataset_reader.py
+@@ -261,8 +261,21 @@
+                 if self._absolute_to_relative_idx is None
+                 else [self._absolute_to_relative_idx[idx] for idx in q_idx]
+             )
++            # Local perf patch (upstream lerobot 0.6.0 and main as of 2026-07-21):
++            # both hf_dataset[key][indices] and hf_dataset[indices][key] materialize
++            # full rows per index -- on an image dataset this decodes every camera
++            # frame of all delta rows just to read a small float column
++            # (~200 ms/sample for a 50-step action chunk; 38% of b64 wall-clock).
++            # A cached column-only view answers the same query in ~0.5 ms.
++            views = getattr(self, "_column_views", None)
++            if views is None or getattr(self, "_column_views_src", None) is not self.hf_dataset:
++                views = {}
++                self._column_views = views
++                self._column_views_src = self.hf_dataset
++            if key not in views:
++                views[key] = self.hf_dataset.select_columns(key)
+             try:
+-                result[key] = torch.stack(self.hf_dataset[key][relative_indices])
++                result[key] = torch.stack(views[key][relative_indices][key])
+             except (KeyError, TypeError, IndexError):
+                 result[key] = torch.stack(self.hf_dataset[relative_indices][key])
+         return result
