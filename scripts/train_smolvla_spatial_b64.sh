@@ -27,10 +27,15 @@ export MUJOCO_GL="${MUJOCO_GL:-egl}"
 # 2026-07-21 re-test on CUDA-13 torch (2.11.0+cu130) after the IOMMU fix:
 #   - dynamo ON (SmolVLA's inner hard-wired torch.compile): 600-step DDP probe
 #     clean at 3.49 step/s (updt_s 0.279 / data_s 0.009) -> re-enabled.
-#   - outer --policy.compile_model=true (max-autotune): still dies in Triton
-#     autotune on sm_80 ("triton_mm Required: 196608 Hardware limit: 166912",
-#     then illegal memory access) -- a torch 2.11 inductor bug, not the driver.
-#     Keep COMPILE=false; revisit on the next torch upgrade.
+#   - outer compile, 600-step DDP probe matrix (2026-07-22):
+#       max-autotune:    dies in Triton autotune on sm_80 ("triton_mm Required:
+#                        196608 Hardware limit: 166912" -> illegal memory access).
+#                        Known inductor bug family (pytorch#95335), not the driver.
+#       default:         clean, 4.33 step/s (updt_s 0.224)  <- new default
+#       reduce-overhead: clean, updt_s 0.234 (cudagraphs likely skipped under DDP)
+#       eager:           3.49 step/s (updt_s 0.279)
+#     Compiled kernels change numerics slightly vs the eager W1 b64 run; success
+#     rates are unaffected, bit-level loss comparisons across eras are not valid.
 export TORCHDYNAMO_DISABLE="${TORCHDYNAMO_DISABLE:-0}"
 
 MULTI_GPU_ARGS=()
@@ -47,7 +52,8 @@ accelerate launch \
   --policy.load_vlm_weights=true \
   --policy.push_to_hub=false \
   --policy.device=cuda \
-  --policy.compile_model="${COMPILE:-false}" \
+  --policy.compile_model="${COMPILE:-true}" \
+  --policy.compile_mode="${COMPILE_MODE:-default}" \
   --dataset.repo_id=HuggingFaceVLA/libero \
   --batch_size="${TRAIN_BATCH_SIZE_PER_GPU:-32}" \
   --steps="${TRAIN_STEPS:-30000}" \
