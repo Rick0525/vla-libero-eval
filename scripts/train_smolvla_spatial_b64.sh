@@ -54,6 +54,7 @@ accelerate launch \
   --policy.device=cuda \
   --policy.compile_model="${COMPILE:-true}" \
   --policy.compile_mode="${COMPILE_MODE:-default}" \
+  --policy.scheduler_decay_steps="${SCHED_DECAY_STEPS:-30000}" \
   --dataset.repo_id=HuggingFaceVLA/libero \
   --batch_size="${TRAIN_BATCH_SIZE_PER_GPU:-32}" \
   --steps="${TRAIN_STEPS:-30000}" \
