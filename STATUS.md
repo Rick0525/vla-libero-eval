@@ -15,6 +15,11 @@
 - [x] 最佳 checkpoint 甄别：25k 正式评测 **84.0%** vs 30k 82.0%（n=1×100，差 2 集=统计平手，07-20 05:20 完成）；**对外数字拍板为 30k 的 82.0%**（终点惯例；25k 的 84 未经换 seed 复测有 winner's curse，不报）
 - [~] 结果正式化：微调 report 已写入 `results/smolvla_spatial_finetune_report.md`（07-20，含双配方对照/曲线/逐任务表/CI 论证）；**失败归因标注待 Rick**——task5/8 全部 20 段视频已拉到本地 `results/failure_videos/`，标注表 `ANNOTATION_zh.md`（四分类 + 赛前预测已登记，先预测后看片），结论回填 report
 
+## 上游贡献（lerobot）
+
+- [x] **#2895 根因评论已发布（2026-07-23）**：定位 delta 查询 40× 退化的真根因（lerobot `set_transform` 触发 datasets ≥4.4 的 custom-format 闸门，列优先语法静默退化为整行取+全量 PNG 解码），四方案同机基准（现状 165ms / select() 185ms 更慢 / 缓存列视图 0.8ms ≈200×），并解释了此前"升级 datasets 即愈"集体误判的来源（#2549 时代 <4.0 形态的先例）→ [评论链接](https://github.com/huggingface/lerobot/issues/2895#issuecomment-5060174507)。本地补丁 `patches/lerobot-delta-query-column-views.patch`（生产验证 46×/样本，b64 训练 data wait 38%→~1%）。
+- [ ] PR：待维护者回应或静默一周后推进（rebase 到 main + 等价性/单列契约测试）。
+
 ## 脚本清单
 
 - `scripts/train_smolvla_spatial.sh` — 首次微调用（文档示例配方，留档对照）
