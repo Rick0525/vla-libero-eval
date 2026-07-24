@@ -64,7 +64,7 @@ All 10 LIBERO-Spatial tasks share the same manipulation — "pick up the black b
 | 8 | next to the plate | 6/10 |
 | 9 | on the wooden cabinet | 8/10 |
 
-## Failure analysis (open)
+## Failure analysis
 
 task5 is the outlier — 2/10 at 30k, and also the worst task at 25k (4/10): the weakness is systematic across checkpoints, not evaluation noise. Hypotheses were registered **before** watching any videos (pre-registration guards against hindsight bias; see `failure_videos/ANNOTATION_zh.md`):
 
@@ -73,7 +73,23 @@ task5 is the outlier — 2/10 at 30k, and also the worst task at 25k (4/10): the
 - **H3 — placement**: successful grasp, failed placement on the plate.
 - **H4 — timeout/dithering**: oscillates between the two bowls without committing.
 
-Pre-registered prediction: **H2**. An 8/10 failure rate is too high for random two-way referent confusion (~50% expected), and "bowl stacked on another bowl" is a tail configuration in the training data. Verdict pending video annotation.
+Pre-registered prediction: **H2**. An 8/10 failure rate is too high for random two-way referent confusion (~50% expected), and "bowl stacked on another bowl" is a tail configuration in the training data.
+
+### Verdict (video annotation, 2026-07-24)
+
+All 12 failure episodes annotated (task5: 8, task8: 4; successes kept as controls). Three ambiguous episodes were resolved by frame-by-frame inspection. Full per-episode table in `failure_videos/ANNOTATION_zh.md`.
+
+| | H1 grounding | H2 grasp | H3 placement | H4 timeout |
+|---|---|---|---|---|
+| task5 (8 failures) | 0 | **5** | 2 | 1 |
+| task8 (4 failures) | 0 | 1 | **3** | 0 |
+
+- **H1 = 0/12.** Every failure approached the correct bowl. Language grounding is not the bottleneck; the two-way-confusion hypothesis is dead. This is the sharpest single result of the annotation.
+- **task5 is grasp-dominated (H2, 5/8) — the pre-registered prediction held.** But 2 of the 5 are an unanticipated sub-mode: **stack grasp** — the gripper closes too deep and lifts the bowl *and* the ramekin as one unit. The policy doesn't miss the bowl; it fails to separate it from its base.
+- **task8 is placement-dominated (H3, 3/4):** the bowl starts adjacent to the plate, transport is trivial, and failures concentrate in placement precision (bowl left resting on the plate's inner rim, off-center). The two tasks fail for different reasons; a merged "dominant failure mode" would misrepresent both.
+- **The success predicate is stricter than intuition.** LIBERO's `On(bowl, plate)` requires direct bowl–plate contact **and** xy center distance < 3 cm (`libero/envs/object_states/base_object_states.py`). One task5 episode placed the intact bowl+ramekin stack onto the plate — behaviorally near-success, failed by definition (no direct contact); two task8 episodes failed the centering test. Under a looser "bowl within plate region" predicate, task5 goes 2→3 and task8 6→8. Cross-benchmark success rates are not comparable without pinning the predicate.
+- **Post-failure recovery loses grounding.** After a failed placement, the policy sometimes re-targets the distractor bowl or the ramekin on retry. Training data contains no failure-recovery demonstrations, so post-failure states are out-of-distribution.
+- **Mechanism note:** the formal eval protocol runs `n_action_steps=1` — the policy predicts a 50-step chunk but executes only the first action, replanning at every control step. These failures are therefore **not open-loop artifacts**: the policy re-observes at every step and still drives into the stack grasp or the off-center placement, and still re-targets the wrong object after a failure. The correction deficit lies in the learned policy, not the control loop — consistent with the absence of failure-recovery demonstrations in training. Untested levers: targeted demonstrations of the stacked configuration; recovery demonstrations; training-side chunk changes. There is no cheap inference-side knob left — closed-loop replanning is already at maximum frequency.
 
 ## Reproducibility notes
 
