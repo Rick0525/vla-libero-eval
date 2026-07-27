@@ -20,7 +20,7 @@
 - [x] **compile 四格矩阵（各 600 步 DDP 探针）**：default mode 胜出（4.33 step/s vs eager 3.49）；max-autotune 复现 W1 崩溃指纹，定谳为 torch 2.11 inductor 在 sm_80 上的真 bug（pytorch#95335 家族），本栈无解、升 torch 前不碰（W7 重估）
 - [x] **b64_100k 对照跑（7/22）**：6h31m 零故障，官方口径终点 **70.0%** vs 30k 的 82.0——「更长余弦=更高终点」不成立，23 epochs 疑似过拟合倒贴；负结果入 leaderboard 证据。task4 新型崩塌（1/10，30k 时代非弱项）10 段视频留档归因素材
 - [x] **失败归因标注定谳（7/24，Rick 标注拍板 + Claude 抽帧核验悬案）**：task5/8 全 12 段失败——**H1 指错碗 = 0/12，语言 grounding 出局（全表最硬结论）**；task5 主因 H2 抓取（5/8，含 2 例「双碗同抓」新子模式：下爪过深把 bowl+ramekin 当整体夹走），task8 主因 H3 放置（3/4，盘缘放置）。LIBERO `On` 谓词（直接接触 + 圆心 xy<3cm）比直觉严，放宽计数则 task5 2→3、task8 6→8。正式口径 n_action_steps=1 每步重推理 → **失败不是开环伪影，是「看见了也不会改」**，修正缺口在策略本身（无失败恢复演示，失败态即 OOD）。结论已回填 report Failure analysis 节；标注表 `results/failure_videos/ANNOTATION_zh.md`
-- [ ] **三层归因体系（感知/规划/控制）**：7/24 拍板、尚未动工——①三层×四分类映射表定稿（含「定层靠哪个干预」列）②标注流程工具化（视频收集→contact-sheet→预注册模板→自动统计）③task4 崩塌 10 段实弹验收；干预实验候选：instruction-swap（感知）/ teleport 状态传送（规划）/ 几何间隙扫描（控制，可滑 W3）
+- [~] **三层归因体系（感知/规划/控制）**：映射表定稿 + 三实验预注册见 `results/attribution_framework_zh.md`（7/27，Rick 批准）；**Exp R 重放保真已发射**（同 seed 重跑 30k 官方评测，输出 `_replay20260727`）；Exp F（ep3 事故性检验，Rick/Claude 预测已登记）与 Exp T（中间态接管 30 局）随后；标注工具化 + task4 实弹验收待做
 
 ## 上游贡献（lerobot #2895）
 
