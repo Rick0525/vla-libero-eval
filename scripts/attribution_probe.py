@@ -11,10 +11,15 @@ Two modes (see results/attribution_framework_zh.md for the experiment design):
   inject   N rollouts that start from a dumped mid-trajectory sim state
            ("takeover"): the policy inherits a state produced by another
            rollout (e.g. just after a successful grasp) and must finish the
-           task. Covers Exp T. Settle steps are forced to 0 here: a dumped
-           state already carries consistent velocities/contacts, and LIBERO's
-           dummy-action settle would command an open gripper, dropping any
-           held object.
+           task. Covers Exp T. MuJoCo's get_state() does NOT include actuator
+           ctrl, and a rim grip needs the servo to keep squeezing: after a
+           reset the gripper ctrl creeps open and pries the restored fingers
+           off the held object within ~2-4 steps (measured, 13/13 drops;
+           neither close commands nor pinning ctrl at the finger position —
+           zero squeeze force — prevents it). So rollout mode dumps the full
+           ctrl vector alongside each state, and inject mode restores it
+           verbatim — the only exact reconstruction of a mid-grasp actuator
+           state. Optional --settle-steps then hold with a closing dummy.
 
 Protocol parity with lerobot-eval: identical make_env / make_policy /
 processor stack and the same rollout() loop; n_action_steps defaults to 1
@@ -76,6 +81,8 @@ def parse_args() -> argparse.Namespace:
                    help="[rollout mode] save the flattened MuJoCo state at every control step")
     p.add_argument("--state-file", help="[inject mode] states.npz produced by --dump-states")
     p.add_argument("--state-step", type=int, help="[inject mode] which dumped step to take over from")
+    p.add_argument("--settle-steps", type=int, default=0,
+                   help="[inject mode] closed-gripper settle steps after state restore (see docstring)")
     p.add_argument("--out-dir", required=True)
     return p.parse_args()
 
@@ -124,17 +131,38 @@ def main() -> None:
         le._reset_stride = 0
         start_desc = {"init_index": args.init_index}
     else:
-        dumped = np.load(args.state_file)["states"]
+        data = np.load(args.state_file)
+        dumped = data["states"]
+        if "ctrls" not in data:
+            raise SystemExit("state file lacks 'ctrls' — re-capture the source with the current probe "
+                             "(exact ctrl restore is required for takeover, see docstring)")
+        ctrls = data["ctrls"]
         if not 0 <= args.state_step < len(dumped):
             raise SystemExit(f"--state-step {args.state_step} out of range [0, {len(dumped)})")
         le._init_states = dumped[args.state_step][None]
         le.init_state_id = 0
         le._reset_stride = 0
-        le.num_steps_wait = 0  # see module docstring: settling would open the gripper
-        start_desc = {"state_file": str(args.state_file), "state_step": args.state_step}
+        le.num_steps_wait = 0  # settled manually below, after pinning the grip
 
-    # Per-step sim-state tap, installed around the env's own step().
+        def _reset_holding(seed=None, _orig=le.reset, **kw):
+            """reset, then restore the source run's full ctrl vector (see docstring)."""
+            obs, info = _orig(seed=seed, **kw)
+            sim = getattr(le._env, "sim", None) or le._env.env.sim
+            sim.data.ctrl[:] = ctrls[args.state_step]
+            raw_obs = None
+            for _ in range(args.settle_steps):
+                raw_obs, _reward, _done, _info = le._env.step([0.0] * 6 + [1.0])
+            if raw_obs is not None:
+                obs = le._format_raw_obs(raw_obs)
+            return obs, info
+
+        le.reset = _reset_holding
+        start_desc = {"state_file": str(args.state_file), "state_step": args.state_step,
+                      "settle_steps": args.settle_steps}
+
+    # Per-step sim-state + ctrl tap, installed around the env's own step().
     state_sink: list[np.ndarray] = []
+    ctrl_sink: list[np.ndarray] = []
     if args.dump_states:
         orig_step = le.step
 
@@ -146,6 +174,7 @@ def main() -> None:
             if not out[2]:
                 sim = getattr(le._env, "sim", None) or le._env.env.sim
                 state_sink.append(np.asarray(sim.get_state().flatten(), dtype=np.float64))
+                ctrl_sink.append(np.asarray(sim.data.ctrl, dtype=np.float64).copy())
             return out
 
         le.step = step_with_dump
@@ -156,6 +185,7 @@ def main() -> None:
         rdir = out_dir / f"rollout_{k:03d}"
         rdir.mkdir(exist_ok=True)
         state_sink.clear()
+        ctrl_sink.clear()
         frames: list[np.ndarray] = []
 
         set_seed(seed)  # policy sampling noise (torch CPU+CUDA, numpy, python)
@@ -171,7 +201,7 @@ def main() -> None:
         n_steps = int(ret["action"].shape[1])
         write_video(str(rdir / "review.mp4"), np.stack(frames), fps=REVIEW_FPS)
         if args.dump_states:
-            np.savez_compressed(rdir / "states.npz", states=np.stack(state_sink))
+            np.savez_compressed(rdir / "states.npz", states=np.stack(state_sink), ctrls=np.stack(ctrl_sink))
         results.append({"rollout": k, "seed": seed, "success": success, "n_steps": n_steps})
         print(f"[{k + 1}/{args.n_rollouts}] seed={seed} success={success} steps={n_steps}", flush=True)
 
