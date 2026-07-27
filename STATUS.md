@@ -20,7 +20,7 @@
 - [x] **compile 四格矩阵（各 600 步 DDP 探针）**：default mode 胜出（4.33 step/s vs eager 3.49）；max-autotune 复现 W1 崩溃指纹，定谳为 torch 2.11 inductor 在 sm_80 上的真 bug（pytorch#95335 家族），本栈无解、升 torch 前不碰（W7 重估）
 - [x] **b64_100k 对照跑（7/22）**：6h31m 零故障，官方口径终点 **70.0%** vs 30k 的 82.0——「更长余弦=更高终点」不成立，23 epochs 疑似过拟合倒贴；负结果入 leaderboard 证据。task4 新型崩塌（1/10，30k 时代非弱项）10 段视频留档归因素材
 - [x] **失败归因标注定谳（7/24，Rick 标注拍板 + Claude 抽帧核验悬案）**：task5/8 全 12 段失败——**H1 指错碗 = 0/12，语言 grounding 出局（全表最硬结论）**；task5 主因 H2 抓取（5/8，含 2 例「双碗同抓」新子模式：下爪过深把 bowl+ramekin 当整体夹走），task8 主因 H3 放置（3/4，盘缘放置）。LIBERO `On` 谓词（直接接触 + 圆心 xy<3cm）比直觉严，放宽计数则 task5 2→3、task8 6→8。正式口径 n_action_steps=1 每步重推理 → **失败不是开环伪影，是「看见了也不会改」**，修正缺口在策略本身（无失败恢复演示，失败态即 OOD）。结论已回填 report Failure analysis 节；标注表 `results/failure_videos/ANNOTATION_zh.md`
-- [~] **三层归因体系（感知/规划/控制）**：映射表定稿 + 预注册 + R/F 两实验已开牌，全档 `results/attribution_framework_zh.md`（7/27）。**Exp R+replay-B**：三跑总分 82/84/84 聚合磐石；逐集一致仅 84/100 且**同栈同 seed 也 84/100**——逐集非确定性是栈固有属性（cudnn.benchmark+autotune 嫌疑），可复现性对外措辞=聚合级。**Exp F**：ep3 布局×10 新噪声 → 死机 0/10（Rick 预注册胜）、成功 0/10、**init3 累计 0/13 毒布局**——布局主导失败、噪声挑选失败方式；H1 累计 0/22。探针脚本 `scripts/attribution_probe.py`（rollout/inject 双模式）落地冒烟通过。待办：Exp T（第三臂重设计待 Rick 拍板）、落点分布分析、标注工具化、task4 实弹
+- [~] **三层归因体系（感知/规划/控制）**：R/F/G/T 四实验 7/27 一日收官，全档 `results/attribution_framework_zh.md`。**头条：task5 归因定谳=控制层（抓取几何先验）**——「布局→抓取侧→在手偏心→落点中心→3cm 谓词」因果链三层证据闭环（观察 17/17 + 天然对照 + 干预 n=20/组、Fisher p≈0.0098；同布局换抓取侧成功率 5%→40%，P-R≡O6 布局效应 100% 中介）。副产物：可复现性定谳（三跑 82/84/84 聚合磐石、逐集同栈同 seed 也仅 84/100 非确定）；接管仪器五轮排障（get_state 不含 ctrl/current_action，v5 反解恢复，社区无先例可回馈 LIBERO #16）。待办：接管税成因、`--deterministic` 模式、标注工具化、task4 实弹、修复验证（数据侧补抓取侧多样性演示）
 
 ## 上游贡献（lerobot #2895）
 
