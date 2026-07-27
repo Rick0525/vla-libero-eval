@@ -140,8 +140,12 @@ def main() -> None:
 
         def step_with_dump(action):
             out = orig_step(action)
-            sim = getattr(le._env, "sim", None) or le._env.env.sim
-            state_sink.append(np.asarray(sim.get_state().flatten(), dtype=np.float64))
+            # On termination LiberoEnv.step() auto-resets, so the sim already
+            # holds a fresh init state — skip it (the terminal sim state is
+            # unrecoverable from outside; states[t] = post-step-t otherwise).
+            if not out[2]:
+                sim = getattr(le._env, "sim", None) or le._env.env.sim
+                state_sink.append(np.asarray(sim.get_state().flatten(), dtype=np.float64))
             return out
 
         le.step = step_with_dump
