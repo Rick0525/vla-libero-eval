@@ -145,10 +145,23 @@ def main() -> None:
         le.num_steps_wait = 0  # settled manually below, after pinning the grip
 
         def _reset_holding(seed=None, _orig=le.reset, **kw):
-            """reset, then restore the source run's full ctrl vector (see docstring)."""
+            """reset, then restore the source run's full actuation state (see docstring).
+
+            sim.data.ctrl alone is not enough: robosuite recomputes the gripper
+            ctrl every step from the python-side `gripper.current_action` creep
+            state (reset to open), overwriting any restored value on step 1 —
+            measured as fingers springing 4.7mm -> 19mm before re-closing, too
+            late for the bowl. Invert the dumped ctrl through the actuator
+            range to recover current_action exactly, no sign-convention guess.
+            """
             obs, info = _orig(seed=seed, **kw)
             sim = getattr(le._env, "sim", None) or le._env.env.sim
             sim.data.ctrl[:] = ctrls[args.state_step]
+            gripper = le._env.robots[0].gripper
+            ids = [sim.model.actuator_name2id(a) for a in gripper.actuators]
+            rng = sim.model.actuator_ctrlrange[ids]
+            bias, weight = 0.5 * (rng[:, 1] + rng[:, 0]), 0.5 * (rng[:, 1] - rng[:, 0])
+            gripper.current_action = np.clip((ctrls[args.state_step][ids] - bias) / weight, -1.0, 1.0)
             raw_obs = None
             for _ in range(args.settle_steps):
                 raw_obs, _reward, _done, _info = le._env.step([0.0] * 6 + [1.0])
