@@ -126,10 +126,16 @@ Claude 分类（复核后，待 Rick 定谳）：
 
 ## 术语对照（对外 report 用语）
 
-| 内部叫法 | 正式说法 |
+| 内部叫法 | 正式说法 / 定义 |
 |---|---|
 | teleport / 状态传送 | environment state reset to intermediate states of successful rollouts |
 | 几何间隙扫描 | grasp-depth parameter sweep |
 | 预注册 | preregistration (predictions committed before running) |
 | 谓词 | (BDDL) success predicate |
 | 神谕状态 | oracle state (drawn from successful trajectories) |
+| 组（曾误写「臂」） | trial arm——一种实验条件下的一批 rollouts，与机械臂无关 |
+| O 组 / P 组 | Oracle（神谕，好布局源）/ Poison（毒布局源）两类接管条件 |
+| 源头局 | source rollout——接管实验中提供注入快照的那一局自然完整跑 |
+| 接管局 | takeover rollout——从源头局的中途快照接手续跑的一局 |
+| 扩样批 | sample-extension batch——首批结果统计不显著后按原配方追加的一批（首批/扩样批须分开报告，防 optional stopping） |
+| 接管税 | takeover tax——接管局相对自然跑的成功率折损（成因分解见 Exp T：大头=源状态质量，残余=仪器/未控变量） |
