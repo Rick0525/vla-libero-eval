@@ -83,6 +83,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--state-step", type=int, help="[inject mode] which dumped step to take over from")
     p.add_argument("--settle-steps", type=int, default=0,
                    help="[inject mode] closed-gripper settle steps after state restore (see docstring)")
+    p.add_argument("--env-seed", type=int, default=None,
+                   help="pin the env seed for every rollout (e.g. to the source rollout's seed, so that "
+                        "model-level fixture placement — the cabinet — matches the source scene exactly; "
+                        "fixtures live outside qpos and are re-sampled per env seed on reset). "
+                        "Policy sampling noise still varies per rollout via --base-seed.")
     p.add_argument("--out-dir", required=True)
     return p.parse_args()
 
@@ -202,11 +207,12 @@ def main() -> None:
         frames: list[np.ndarray] = []
 
         set_seed(seed)  # policy sampling noise (torch CPU+CUDA, numpy, python)
+        env_seed = args.env_seed if args.env_seed is not None else seed
         with torch.no_grad():
             ret = rollout(
                 venv, policy,
                 env_preprocessor, env_postprocessor, preprocessor, postprocessor,
-                seeds=[seed],
+                seeds=[env_seed],
                 render_callback=lambda _e: frames.append(le.render()),
             )
 
