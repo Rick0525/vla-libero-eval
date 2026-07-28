@@ -16,7 +16,9 @@
 #     global batch = NUM_GPUS x per-process (verify smpl counter on first probe).
 #
 # Machine paths come from env.local.sh. Knobs: NUM_GPUS, TRAIN_BATCH_SIZE_PER_GPU,
-# TRAIN_STEPS, SAVE_FREQ, NUM_WORKERS, LOG_FREQ, TRAIN_SEED, RUN_TAG, COMPILE.
+# TRAIN_STEPS, SAVE_FREQ, NUM_WORKERS, LOG_FREQ, TRAIN_SEED, RUN_TAG, COMPILE,
+# DATASET_REPO (default HuggingFaceVLA/libero; Exp E boost arm passes
+# local/libero_task5boost_k4 — resolved under $HF_LEROBOT_HOME).
 set -euo pipefail
 
 RUN_TAG="${RUN_TAG:-b64_30k}"
@@ -55,7 +57,7 @@ accelerate launch \
   --policy.compile_model="${COMPILE:-true}" \
   --policy.compile_mode="${COMPILE_MODE:-default}" \
   --policy.scheduler_decay_steps="${SCHED_DECAY_STEPS:-30000}" \
-  --dataset.repo_id=HuggingFaceVLA/libero \
+  --dataset.repo_id="${DATASET_REPO:-HuggingFaceVLA/libero}" \
   --batch_size="${TRAIN_BATCH_SIZE_PER_GPU:-32}" \
   --steps="${TRAIN_STEPS:-30000}" \
   --num_workers="${NUM_WORKERS:-32}" \
