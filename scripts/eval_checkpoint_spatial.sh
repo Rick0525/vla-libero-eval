@@ -12,8 +12,11 @@
 # CKPT_STEP (default last), N_ACTION_STEPS (default 1), TRAIN_RUN,
 # EVAL_N_EPISODES (default 10), EVAL_TASK_IDS (default all), EVAL_SEED,
 # EVAL_BATCH_SIZE (parallel env copies; episode seeds are assigned by episode
-# index so results stay comparable across batch sizes), EVAL_TAG (extra
-# output-dir suffix so reruns don't collide).
+# index so results stay comparable across batch sizes), EVAL_USE_ASYNC
+# (true/false override of eval.use_async_envs — this lerobot defaults it to
+# true, but batch_size=1 silently downgrades to SyncVectorEnv, so the knob
+# only matters at batch>1), EVAL_TAG (extra output-dir suffix so reruns don't
+# collide).
 set -euo pipefail
 
 TRAIN_RUN="${TRAIN_RUN:-smolvla_spatial_official_100k}"
@@ -27,6 +30,9 @@ export MUJOCO_GL="${MUJOCO_GL:-egl}"
 EXTRA_ARGS=()
 if [[ -n "${EVAL_TASK_IDS:-}" ]]; then
   EXTRA_ARGS+=("--env.task_ids=${EVAL_TASK_IDS}")
+fi
+if [[ -n "${EVAL_USE_ASYNC:-}" ]]; then
+  EXTRA_ARGS+=("--eval.use_async_envs=${EVAL_USE_ASYNC}")
 fi
 
 lerobot-eval \
