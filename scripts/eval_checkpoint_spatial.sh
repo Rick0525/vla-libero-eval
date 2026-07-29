@@ -16,7 +16,9 @@
 # (true/false override of eval.use_async_envs — this lerobot defaults it to
 # true, but batch_size=1 silently downgrades to SyncVectorEnv, so the knob
 # only matters at batch>1), EVAL_TAG (extra output-dir suffix so reruns don't
-# collide).
+# collide), EVAL_ENTRY (alternate eval entry command, e.g.
+# "python scripts/lerobot_eval_eglspread.py" to spread worker EGL rendering
+# across GPUs via EVAL_EGL_DEVICES — see that wrapper's header).
 set -euo pipefail
 
 TRAIN_RUN="${TRAIN_RUN:-smolvla_spatial_official_100k}"
@@ -35,7 +37,7 @@ if [[ -n "${EVAL_USE_ASYNC:-}" ]]; then
   EXTRA_ARGS+=("--eval.use_async_envs=${EVAL_USE_ASYNC}")
 fi
 
-lerobot-eval \
+${EVAL_ENTRY:-lerobot-eval} \
   --policy.path="${MODEL_PATH}" \
   --policy.n_action_steps="${N_ACTION_STEPS}" \
   --policy.device=cuda \
