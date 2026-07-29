@@ -40,7 +40,7 @@ case "$LEG" in
     echo "CBAL_PROBE_OK — launching real training"
     unset TRAIN_STEPS SAVE_FREQ LOG_FREQ
     export RUN_TAG=exp_e_cbal_20260729
-    bash scripts/train_smolvla_spatial_b64.sh
+    bash scripts/train_smolvla_spatial_b64.sh || { echo "CBAL_TRAIN_FAILED"; exit 1; }
     echo "CBAL_TRAIN_DONE"
     ;;
   eval)
@@ -69,7 +69,9 @@ case "$LEG" in
     if [ ! -f "$FINAL_CK" ]; then
       echo "CBAL_CURVE_ABORT — no final checkpoint"; exit 1
     fi
-    bash scripts/launch_exp_e_curves.sh "$RUN" 0
+    # A DONE marker must never fire on failure (7/29 lesson: the first run of
+    # this leg printed DONE after a file-not-found, and the monitor believed it).
+    bash scripts/launch_exp_e_curves.sh "$RUN" 0 || { echo "CBAL_CURVE_FAILED"; exit 1; }
     echo "CBAL_CURVE_DONE"
     ;;
 esac
