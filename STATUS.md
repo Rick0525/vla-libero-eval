@@ -29,6 +29,7 @@
 - [x] **Exp E-C 配平臂（7/29）→ Exp E 三臂收档**：锚点帧份额拉平（t3+34/t7+22 盲选复制）重训——**t3 如预言修复（−9→−1），但 t7 反而炸穿（−4→−10）、t5 收益蒸发（init3 4/10→1/10）**；预注册两共识注全错、地鼠注字面 Claude 胜/精神 Rick 胜（塌在被干预任务内部而非雷区）。**终局结论：0.45B 上逐集复制式定向上采样是钝器，干预不可局部控制，打地鼠是路线内在属性；出路在训练侧或更多样演示**（limitation：每变体 n=1 重训彩票）。全档见 `results/attribution_framework_zh.md` Exp E/E-C 节
 - [x] **并行评测判别三连（7/28–29）**：①asyncb10 结果漂移出 sync-b1 噪声带 → **不采纳，官方口径维持 sync-b1**（六样本均 82.2 vs 84.0，统计上未证有偏，采纳闸门未过）；②批量本身不赚钱（syncb10 1609s ≈ sync-b1 1444s，锁步惩罚吃掉提前退出收益）；③**EGL 渲染串行化证伪**——摊卡判别实验（渲染 per-worker 轮转到 GPU1/2/012）仅 1.2× 且剂量立即饱和、GPU util 24%/8% 远不饱和 → 真瓶颈在 CPU 侧锁步编排（每步 IPC×10 + max-of-10 等待）。旋钮工具化入 repo：`EVAL_USE_ASYNC`、`EVAL_ENTRY`、`EVAL_EGL_DEVICES`（白捡 1.2×）；大加速真旋钮 = n_action_steps 或 max_parallel_tasks（待验，W4 RLinf 铺垫）
 - [ ] 顺手上游素材：HuggingFaceVLA/libero meta per-episode 指针 1690/1693 全错（官方 dataset_tools 在该集全废，split 首崩），可报 lerobot / HF dataset repo
+- [~] **leaderboard 扩模型（7/30 发射，开牌待明晨）**：口径定稿=统一套件/init 布局/集数（50/任务），推理配置各用官方（SmolVLA n_action_steps=1 / π0.5 chunk50 执行 10 / OFT chunk8 开环）逐列注明。四局过夜：SmolVLA 500 集（基线 CI ±7.5→±3.4pp）、π0.5 500 集（lerobot 栈内直评，seed 1000 与 SmolVLA 同布局集）、OFT 特训 500 + 合训 500（官方栈 `.venv-oft`，「特训 vs 合训」对比维度）。冒烟全过（π0.5 2/2、OFT 20/20 @6.6s/集）。踩坑入档：PaliGemma tokenizer gated 需 token；`hf download` 手工缓存缺 `.no_exist` 标记致离线假报连接错（SOP：在线真加载一次）；OFT 官方脚本改写本地 checkpoint 目录（有备份）。后续：init3 毒布局跨模型探针（0.45B→3.3B→7.5B 容量轴上病灶消不消失）
 
 ## 上游贡献（lerobot #2895）
 
