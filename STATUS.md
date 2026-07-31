@@ -2,9 +2,11 @@
 
 > 更新规则：进度一变就更新本文件（CLAUDE.md 约定）。
 
-## 当前状态：W3 D3（2026-07-29）
+## 当前状态：W3 D5（2026-07-31）
 
-**头条：SmolVLA(0.45B, VLM-init) 微调 libero_spatial 成功率 82.0%**（30k checkpoint，n_action_steps=1 × 100 episodes，官方协议，seed 1000；论文参考值 90，95% CI ±7.5pp）。W2 的 100k 对照跑（70.0%）证明更长调度无增益，**30k/82.0 维持对外数字**。
+**头条：LIBERO-Spatial leaderboard v1 开牌（[results/leaderboard.md](results/leaderboard.md)，500 集/模型、同布局集）**：OFT 特训 **97.4** = 合训 **97.4**（合训税 0）＞ π0.5 **93.8** ＞ SmolVLA（我方微调）**83.8**。task5 容量阶梯 28→86→96%；init3 毒布局阶梯 0/13→4/10→5/10→1/1；π0.5 「复现差」定谳为不存在（官方 97.0 系 n=100 且只看前 10 布局，z=1.26 p=0.21）；π0.5 全部 29 个失败集看片定谳=目标混淆（t7/t9 布局锁定）+ 抓取失败（t5/t4 采样波动）两机制。
+
+（历史头条：SmolVLA 30k/82.0 @n=100，现由 83.8 @n=500 取代，CI ±7.5→±3.2pp。）
 
 ### W1（7/14–7/20）：基线与重训
 
@@ -29,7 +31,10 @@
 - [x] **Exp E-C 配平臂（7/29）→ Exp E 三臂收档**：锚点帧份额拉平（t3+34/t7+22 盲选复制）重训——**t3 如预言修复（−9→−1），但 t7 反而炸穿（−4→−10）、t5 收益蒸发（init3 4/10→1/10）**；预注册两共识注全错、地鼠注字面 Claude 胜/精神 Rick 胜（塌在被干预任务内部而非雷区）。**终局结论：0.45B 上逐集复制式定向上采样是钝器，干预不可局部控制，打地鼠是路线内在属性；出路在训练侧或更多样演示**（limitation：每变体 n=1 重训彩票）。全档见 `results/attribution_framework_zh.md` Exp E/E-C 节
 - [x] **并行评测判别三连（7/28–29）**：①asyncb10 结果漂移出 sync-b1 噪声带 → **不采纳，官方口径维持 sync-b1**（六样本均 82.2 vs 84.0，统计上未证有偏，采纳闸门未过）；②批量本身不赚钱（syncb10 1609s ≈ sync-b1 1444s，锁步惩罚吃掉提前退出收益）；③**EGL 渲染串行化证伪**——摊卡判别实验（渲染 per-worker 轮转到 GPU1/2/012）仅 1.2× 且剂量立即饱和、GPU util 24%/8% 远不饱和 → 真瓶颈在 CPU 侧锁步编排（每步 IPC×10 + max-of-10 等待）。旋钮工具化入 repo：`EVAL_USE_ASYNC`、`EVAL_ENTRY`、`EVAL_EGL_DEVICES`（白捡 1.2×）；大加速真旋钮 = n_action_steps 或 max_parallel_tasks（待验，W4 RLinf 铺垫）
 - [ ] 顺手上游素材：HuggingFaceVLA/libero meta per-episode 指针 1690/1693 全错（官方 dataset_tools 在该集全废，split 首崩），可报 lerobot / HF dataset repo
-- [~] **leaderboard 扩模型（7/30 发射，开牌待明晨）**：口径定稿=统一套件/init 布局/集数（50/任务），推理配置各用官方（SmolVLA n_action_steps=1 / π0.5 chunk50 执行 10 / OFT chunk8 开环）逐列注明。四局过夜：SmolVLA 500 集（基线 CI ±7.5→±3.4pp）、π0.5 500 集（lerobot 栈内直评，seed 1000 与 SmolVLA 同布局集）、OFT 特训 500 + 合训 500（官方栈 `.venv-oft`，「特训 vs 合训」对比维度）。冒烟全过（π0.5 2/2、OFT 20/20 @6.6s/集）。踩坑入档：PaliGemma tokenizer gated 需 token；`hf download` 手工缓存缺 `.no_exist` 标记致离线假报连接错（SOP：在线真加载一次）；OFT 官方脚本改写本地 checkpoint 目录（有备份）。后续：init3 毒布局跨模型探针（0.45B→3.3B→7.5B 容量轴上病灶消不消失）
+- [x] **leaderboard 扩模型（7/30 发射，7/31 开牌收档 → [results/leaderboard.md](results/leaderboard.md)）**：口径定稿=统一套件/init 布局/集数（50/任务），推理配置各用官方（SmolVLA n_action_steps=1 / π0.5 chunk50 执行 10 / OFT chunk8 开环）逐列注明。四局零事故：**OFT 特训 97.4 = 合训 97.4（合训税 0，逐任务差 ≤±2）、π0.5 93.8、SmolVLA 83.8（CI ±3.2pp）**。踩坑入档：PaliGemma tokenizer gated 需 token；`hf download` 手工缓存缺 `.no_exist` 标记致离线假报连接错（SOP：在线真加载一次）；OFT 官方脚本改写本地 checkpoint 目录（有备份）；OFT 栈 spatial 每集 220+10 步 vs lerobot 栈 280（如实注明，OFT 在更短预算下仍领先）
+- [x] **π0.5 复现差定谳（7/31）**：97.5 系四套件平均，spatial 目标实为 **97.0@n=100**；z=1.26 p=0.21 不显著 + 官方协议只访问 init states 0–9（t7 十个毒布局 8 个编号 ≥10，官方结构性看不见）→ 复现差不存在；社区 #2114 报 77%，我方 93.8 在复现分布高端
+- [x] **π0.5 失败归因收档（7/31，29/29 全片裁决 ×2 独立 run）**：**t7/t9 = 「on the stove」↔「on the wooden cabinet」对称目标混淆**（t7 帧证 10/10 拿柜顶碗、放置动作无瑕、谓词永不亮；失败集跨 run 逐集重合=布局锁定）；**t5/t4 = 抓取失败**（13/13 抓不起或偏心抓，跨 run 低重合=采样波动）。**失败可复现性即机制指纹**（离散决策错误→锁定；接触几何边缘→波动）。跨模型：容量改变失败机制构成而非单调修复——0.45B 短板接触几何、3.3B 换成空间指代混淆、7.5B 两者皆罩。工具入库 `lerobot_eval_fullvideo.py`（EVAL_RENDER_ALL_N 解 10 集录像上限）
+- [x] **init3 毒布局跨模型探针（7/31）**：SmolVLA 0/13 → +定向上采样 4/10 → π0.5 **5/10**（探针 seeds 2000–2009）→ OFT 特训/合训各 **1/1**（官方 eval 按集序号索引 init states，ep3 即 init3，免费开牌）。口径不对称入档：随机策略=命中率、确定性策略（OFT L1 头 + cudnn.deterministic）=0/1 覆盖，不可同格比较
 
 ## 上游贡献（lerobot #2895）
 
