@@ -155,6 +155,15 @@ monotonically fix everything:**
   stove/cabinet confusion" is verified on task 7 only.
 - OFT's light task-7/9 failures are unreviewed; OFT-combined is evaluated on Spatial
   only so far.
+- **We evaluate π0.5 in pure action mode.** The lerobot port has no text-generation
+  path at all: on load, `lm_head.weight` is remapped into `embed_tokens.weight`
+  (`modeling_pi05.py:1111`) and the module's only output projection is
+  `action_out_proj`. The paper's hierarchical inference — decode a high-level subtask
+  as language, then condition the action expert on it — is not ported, so it is out of
+  scope here. Consequence for attribution: the referent decision behind the task-7
+  failures has no observable intermediate anywhere in this stack, which is why the
+  mechanism had to be established behaviorally (video + failure-set overlap) rather
+  than by reading an internal variable.
 - The two eval stacks differ beyond inference configs (episode caps 280 vs 220+10,
   env library versions); we kept each model's official stack by design and disclose
   rather than normalize.
