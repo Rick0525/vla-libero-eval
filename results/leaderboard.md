@@ -1,5 +1,7 @@
 # LIBERO-Spatial VLA Leaderboard (v1)
 
+*English · [中文](leaderboard_zh.md)*
+
 *2026-07-31 · 500 episodes per model · one shared, benchmark-pinned layout set · failure attribution included*
 
 Three open-source VLA models (four checkpoints) evaluated on LIBERO-Spatial under a single
