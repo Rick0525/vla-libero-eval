@@ -45,7 +45,8 @@
 - [x] **根因评论发布（7/23）**：定谳 custom-format 闸门机制 + 四方案同机基准（现状 165ms / select() 185ms 更慢 / 列视图 0.8ms ≈200×）+ 集体误判来源考古（#2549 时代 <4.0 形态的先例）→ [评论](https://github.com/huggingface/lerobot/issues/2895#issuecomment-5060174507)
 - [x] **lhoestq（datasets 负责人）16 分钟内回帖实质认可**；追帖（7/24）接其 column-based transform 长期解、给出 patch 退役路径、向 assignee 要 PR 绿灯 → [回帖](https://github.com/huggingface/lerobot/issues/2895#issuecomment-5066001307)
 - [x] **PR 材料全备**（留档 VLA_Lab `upstream_prep/lerobot_2895/`）：patch A 正式版（基 main a0eb860，缓存正装 `__init__` + 删 try/except + timestamp 查询顺手修）+ 两枚测试（全帧等价 + spy transform 单列契约）；服务器 dev 环境（lerobot main editable）pytest 12/12、pre-commit 全 hook 通过
-- [ ] **开 PR**：assignee imstevenpmwork 点头即开火；静默至 **8/1** 也开火。checklist 需附一条对他人 open PR 的 review（拟 #3558，已深度分析）
+- [x] **开 PR（8/3 夜，火线过期 2 天补射）**：[PR #4314](https://github.com/huggingface/lerobot/pull/4314)，Rick 网页亲发。预检（8/3 晚）：main 自 a0eb860 走 110 commits 但两目标文件零人碰、`hf_transform_to_torch` 未动；rebase 至 f1efa588 干净、pytest 12/12、pre-commit 全绿。checklist 的 community review 已先行发布于 #3558（Comment 型，三段：hoisting 正确/为何仅 22%/与列视图正交可叠加）。首发 CI 仅 Label PR 绿，主工作流待维护者放行（首次贡献者常态）
+- [ ] **守楼**：CI 放行与全绿后手动补勾 checklist；被 @ 尽量 48h 内回；#3558 若先合则按承诺重放 rebase
 
 ## 脚本清单
 
