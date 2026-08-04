@@ -2,7 +2,7 @@
 
 > 方法论：**先写预测，再看视频**（防马后炮偏差）。每段视频按四分类标注，标注完成后统计主导模式，回填 report 的 Failure analysis 节。
 > 视频位置：`ckpt030000_n1/videos/libero_spatial_5/`（task5）与 `.../libero_spatial_8/`（task8），每任务 10 段全量（含成功集，作对照参考）。
-> ⚠️ 环境补记（8/04）：`ckpt030000_n1/` 视频出自 7/20 原跑（旧 conda venv，确切 MuJoCo 版本不可考）；同目录下 `attr_f_task5_init3/` 出自 uv venv（MuJoCo 3.8.1）。MuJoCo 版本已被姊妹项目定谳为 task5 强物理变量（3.8.1 属加难区），本表 task5 标注均为该物理档下的行为学观察——机制分类（H1–H4）不受影响，发生率外推须加版本前提。详见 leaderboard「局限」首条。
+> ⚠️ 环境补记（8/04）：`ckpt030000_n1/` 视频出自 7/20 原跑（旧 conda venv，确切 MuJoCo 版本不可考）；同目录下 `attr_f_task5_init3/` 出自 uv venv（MuJoCo 3.8.1）。MuJoCo 版本已被姊妹项目定谳为 task5 强物理变量（3.8.1 属加难区），本表 task5 标注均为该物理档下的行为学观察——机制分类（H1–H4）不受影响，发生率外推须加版本前提。（8/05 补跑：task5 @3.2.7 = 40/50，28% 塌方主体系版本伪影，任务难度定标见 leaderboard。）
 
 ## 任务定义（十任务动作全同，仅空间指代不同）
 
