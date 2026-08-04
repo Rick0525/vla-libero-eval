@@ -2,6 +2,7 @@
 
 > 定稿 2026-07-27（Rick 批准 7/26 草稿）。用途：①指挥 W2/W3 归因实验；②作为可复用标注量规，后续评 OpenVLA-OFT / π0 直接套用。英文版随 W7 report 定稿再出。
 > 方法论：所有干预实验**先预注册预测再开跑**（防马后炮偏差，先例见 `failure_videos/ANNOTATION_zh.md` 赛前预测节）。
+> ⚠️ **8/04 环境披露**：本文全部 SmolVLA 实验跑在 uv venv（MuJoCo **3.8.1**）；7/20 原跑（Exp R 的对照对象、`ckpt030000_n1` 视频）在旧 conda venv（确切 MuJoCo 版本不可考，重放 L1/L2 对账守住提示同难度档）。姊妹项目 8/04 定谳 MuJoCo 版本为 task5 强物理变量（3.8.1 属加难区：同一 RL checkpoint task5 12% vs 健康区 98%）。**读法**：本文所有同栈对照（多 seed、干预、重放）内部有效性不变；但 task5 绝对难度、init3 毒布局硬零档等对「LIBERO task5 本身」的外推，须加「MuJoCo 3.8.1 物理下」前提——init3 在健康版本下是否仍为毒布局，待补跑核实（见 STATUS / leaderboard「局限」首条）。
 
 ## 三层定义
 
