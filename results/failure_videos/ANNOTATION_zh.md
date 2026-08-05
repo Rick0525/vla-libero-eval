@@ -64,3 +64,15 @@
 对策候选（未验证）：① 数据侧补「叠碗构型」演示；② 补/合成失败恢复演示（修 OOD 恢复）；③ 训练侧改 chunk_size 等——留到下次讨论定。
 
 英文结论已回填 `../smolvla_spatial_finetune_report.md` Failure analysis 节。
+
+## 补档（2026-08-05 午间）：双版本 task5 视频对照 + 「双碗同抓」物理成因定位
+
+**素材**：同 checkpoint（30k）、同 official500 协议、仅 MuJoCo 版本不同的 task5 全量视频两组（episode 编号一一对应同布局）：
+
+- `mj327_task5/`：8/5 凌晨 3.2.7 复跑（服务器 `smolvla_…_official500_mj327_20260804`），task5 = 40/50（80%）
+- `mj381_task5/`：7/30 深夜 3.8.1 原跑（服务器 `smolvla_…_official500_20260730`），task5 = 14/50（28%）
+- 抽帧对照图（第 5 帧，策略尚未有效行动）：`task5_initframe_327top_381bot.png`（六格总览）、`task5_bowl_zoom_327left_381right.png`（碗区放大）；英文标注版 `task5_init_drift_grid_labeled.png` / `task5_init_drift_zoom_labeled.png`（上游 issue 主证图，Rick 8/5 拍板）
+
+**关键观察（Rick 肉眼判读定稿）**：3.8.1 下**开局碗即已滑落**——以异常角度斜靠在 ramekin 右上方、半脱离；3.2.7 下碗正常（略斜）坐于 ramekin 上。即任务前提「bowl **on** the ramekin」在 3.8.1 物理下开局即被破坏：视觉 OOD + 抓取几何全变。这为本表 H2 的「双碗同抓」子模式补上物理成因——碗与 ramekin 斜靠咬合，「只抓上面那只」自然变难。
+
+**外部佐证与边界更新**：上游 LIBERO issue #141（2026-04-16，open 无回复）报告 mujoco **3.6.0** 下同签名现象（`set_init_state` 后碗落下滑偏 ~1.6cm）→ 漂移引入边界由 (3.4.0, 3.8.1] 压窄至 **(3.4.0, 3.6.0]**；changelog 首嫌 = 3.5.0「margin/gap 合并由取 max 改为求和」（接触检测语义变更，恰在区间内）。待做：无策略纯物理探针（加载 task5 init state + step + 量碗心偏移）在 3.4.0/3.5.0/3.6.0 钉死单版本边界。
