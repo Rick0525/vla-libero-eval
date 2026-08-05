@@ -76,3 +76,5 @@
 **关键观察（Rick 肉眼判读定稿）**：3.8.1 下**开局碗即已滑落**——以异常角度斜靠在 ramekin 右上方、半脱离；3.2.7 下碗正常（略斜）坐于 ramekin 上。即任务前提「bowl **on** the ramekin」在 3.8.1 物理下开局即被破坏：视觉 OOD + 抓取几何全变。这为本表 H2 的「双碗同抓」子模式补上物理成因——碗与 ramekin 斜靠咬合，「只抓上面那只」自然变难。
 
 **外部佐证与边界定谳**：上游 LIBERO issue #141（2026-04-16，open 无回复）报告 mujoco **3.6.0** 下同签名现象（`set_init_state` 后碗落下滑偏）。当日午间无策略物理探针（task5 官方 50 init states，settle 250 步量碗-ramekin 滑移/倾角）**把边界钉到单版本 3.4.0**：3.2.7/3.3.0/3.3.7 = 1.45cm/~16°（落座微倾，即上图左列），3.4.0/3.6.0/3.8.1 = 3.72cm/10.5°（滑脱斜靠，即上图右列），50 init 数值全同、确定性物理。归因 = 3.4.0 的 **box-box 距离 bugfix**（commit 88383684；碗 40 box × ramekin 25 box 碰撞体）——健康物理依赖的是旧版 bug 行为。详证见姊妹项目 `docs/findings/libero-spatial-task5-collapse.md`。
+
+**同物理修复验证（8/5 午后，因果环终局闭合）**：官方 init 文件本把碗**悬空存于 ramekin 上方 11cm**（`task5_raw_init_floating.png`，首次可视化——落座 settle 发生在 reset 内部、相机开录前，视频第 0 帧即终局，故砸落过程历来无人目击）。座姿在 3.8.1 下完全稳定（50 布局再 settle 额外滑移 0.00cm）→ 据此重生成 pre-settled init states（settle 物体 + 钉住臂姿 + 零速度）→ **3.8.1 物理不动、只换 init 文件重跑 task5：42/50 = 84%**（对照：3.8.1+官方 init 28%，3.2.7+官方 init 80%）——**塌方成分 100% 为开局前提破坏，操作期物理差异可忽略**。证据图 `task5_reseat_fix_same_physics.png`（同物理只换 init 的第 5 帧对比）；验证跑视频 `mj381_reseat_task5/`（ep 编号与 mj381/mj327 两组对应同布局）。
