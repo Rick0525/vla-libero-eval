@@ -39,6 +39,7 @@
 - 评测栈：SmolVLA 与 π0.5 跑在 lerobot 0.6.0（同步向量环境、batch 1、seed 1000，**MuJoCo 3.2.7**——主 venv 日常钉 3.8.1，主表跑系临时降版、跑毕还原）；OFT 跑在其官方仓库环境（**MuJoCo 3.2.7** 原生——官方依赖链无显式钉版、`robosuite>=2.3.0` 下安装期 resolver 恰解得健康区版本；`cudnn.deterministic=True`——该开关只约束 cuDNN 卷积，不构成闭环逐位复现的保证，见「局限」）。
 - 单集步数上限：280 步（lerobot 栈）vs 220 + 10 步稳定（OFT 官方）。这个不对称如果有偏向，是偏向 lerobot 栈的模型；OFT 是在更短的预算下依然领先。
 - SmolVLA 没有官方的 LIBERO-Spatial checkpoint，这一行是我方按论文配方做的微调（全局 batch 64、30k 步）。其余各行都是未经改动的已发布 checkpoint。
+- **SmolVLA「~90（论文）」参考值的口径（8/06 查实入档）**：论文 ~90 系**四套件全量混训单模型**分套件开牌——论文 §4 明载训练数据为 40 任务 1,693 集（"1,693 episodes covering all tasks"、"multi-task training setup"），评测每任务 10 试（Spatial n=100）。我方这行**训练口径与之对齐**：训练数据同为四套件全量 `HuggingFaceVLA/libero`（40 任务 1,693 集；checkpoint 的 `train_config.json` 无子集过滤），并非 spatial 特训（此前微调 report 曾误记 "libero_spatial subset"，已订正——1,693 恰为四套件总数，spatial 单套件仅 432 集）。与论文的剩余口径差：训练步数 30k vs 100k（论文自注步数可大幅缩减而性能损失不大）、评测规模 500 集固定布局 vs 100 集、MuJoCo 版本（论文全篇无记载，时间线推断 3.2/3.3 健康区）。2.6pp 缺口双比例 z = 0.73、p = 0.47——不显著，处理同 π0.5 复现差账。
 
 ## 逐任务网格（成功数 / 50）
 

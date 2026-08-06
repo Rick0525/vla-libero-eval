@@ -5,7 +5,7 @@
 ## Setup
 
 - **Policy**: SmolVLA 0.45B — pretrained SmolVLM2-500M backbone (first 16 layers, frozen; `train_expert_only=true`), action expert trained from scratch, chunk size 50, 512×512 inputs.
-- **Data**: `HuggingFaceVLA/libero`, libero_spatial subset — 1,693 trajectories.
+- **Data**: `HuggingFaceVLA/libero` — the full four-suite mixture (40 tasks, 1,693 trajectories; no subset filter, verified in the checkpoint's `train_config.json`), matching the paper's multi-task protocol ("1,693 episodes covering all tasks", §4). Only the *evaluation* targets the Spatial suite. *(Corrected 2026-08-06: earlier revisions mislabeled this as a "libero_spatial subset" — 1,693 is the four-suite total; Spatial alone is 432 episodes.)*
 - **Framework**: lerobot v0.6.0. Training: `scripts/train_smolvla_spatial_b64.sh`; evaluation: `scripts/eval_checkpoint_spatial.sh`.
 
 ## Two runs, one lesson
