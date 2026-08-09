@@ -67,11 +67,11 @@
 
 ## 补档（2026-08-05 午间）：双版本 task5 视频对照 + 「双碗同抓」物理成因定位
 
-**素材**：同 checkpoint（30k）、同 official500 协议、仅 MuJoCo 版本不同的 task5 全量视频两组（episode 编号一一对应同布局）：
+**素材**：同 checkpoint（30k）、同 official500 协议、仅 MuJoCo 版本不同的 task5 视频两组（各为前 10 集，默认录像上限；episode 编号一一对应同布局）：
 
 - `mj327_task5/`：8/5 凌晨 3.2.7 复跑（服务器 `smolvla_…_official500_mj327_20260804`），task5 = 40/50（80%）
 - `mj381_task5/`：7/30 深夜 3.8.1 原跑（服务器 `smolvla_…_official500_20260730`），task5 = 14/50（28%）
-- 抽帧对照图（第 5 帧，策略尚未有效行动）：`task5_initframe_327top_381bot.png`（六格总览）、`task5_bowl_zoom_327left_381right.png`（碗区放大）；英文标注版 `task5_init_drift_grid_labeled.png` / `task5_init_drift_zoom_labeled.png`（上游 issue 主证图，Rick 8/5 拍板）
+- 抽帧对照图（第 5 帧，策略尚未有效行动）：`task5_initframe_327top_381bot.png`（六格总览）、`task5_bowl_zoom_327left_381right.png`（碗区放大）；英文标注版 `task5_init_drift_grid_labeled.png` / `task5_init_drift_zoom_labeled.png`（上游 issue 主证图，Rick 8/5 拍板；zoom 标注版 8/9 重制为上下排版——上 3.2.7 / 下 3.8.1，各取 ep0/ep1 第 5 帧碗区裁剪，标注措辞同步 issue 草稿改为 "tilted on the rim, half overhanging"，生成脚本 `scripts/make_task5_zoom_figure.py`）
 
 **关键观察（Rick 肉眼判读定稿）**：3.8.1 下**开局碗即已滑落**——以异常角度斜靠在 ramekin 右上方、半脱离；3.2.7 下碗正常（略斜）坐于 ramekin 上。即任务前提「bowl **on** the ramekin」在 3.8.1 物理下开局即被破坏：视觉 OOD + 抓取几何全变。这为本表 H2 的「双碗同抓」子模式补上物理成因——碗与 ramekin 斜靠咬合，「只抓上面那只」自然变难。
 
@@ -80,3 +80,11 @@
 **同物理修复验证（8/5 午后，因果环终局闭合）**：官方 init 文件本把碗**悬空存于 ramekin 上方 11cm**（`task5_raw_init_floating.png`，首次可视化——落座 settle 发生在 reset 内部、相机开录前，视频第 0 帧即终局，故砸落过程历来无人目击）。座姿在 3.8.1 下完全稳定（50 布局再 settle 额外滑移 0.00cm）→ 据此重生成 pre-settled init states（settle 物体 + 钉住臂姿 + 零速度）→ **3.8.1 物理不动、只换 init 文件重跑 task5：42/50 = 84%**（对照：3.8.1+官方 init 28%，3.2.7+官方 init 80%）——**塌方成分 100% 为开局前提破坏，操作期物理差异可忽略**。证据图 `task5_reseat_fix_same_physics.png`（同物理只换 init 的第 5 帧对比）；验证跑视频 `mj381_reseat_task5/`（ep 编号与 mj381/mj327 两组对应同布局）。
 
 **π0.5 对照判读（8/5 午后，考古 + 抽帧 + Rick 看片）**：π0.5（`lerobot/pi05_libero_finetuned`，HF 创建于 2025-10-01——mujoco 3.3.6/3.3.7 健康时代；2026-07-29 的修改系 v044 格式重打包，非重训）在 7/30 的 3.8.1 评测中吃的是**同一份坏 init**（抽帧核验：第 0 帧碗同样滑落斜靠）——task5 仍 43/50。**「免疫」= 策略鲁棒性，不是初始状态豁免**（备选假说「π0.5 的 init 不同」被抽帧排除）。Rick 看片判读：保存 10 段中唯一失败 **ep6 挂在放置精度**（前伸略多、搁盘缘判负，H3 型），抓歪碗全程无碍；全跑失败集 ep 6/14/15/24/25/34/39（7/50），失败模式与前提破坏无关。**同一份坏 init，两策略失败谱完全不同**：SmolVLA 被专杀在 H2（斜靠咬合 → 双碗同抓），π0.5 只剩版本无关的 H3 精度散布。视频 `pi05_mj381_task5/`。
+
+## 补档（2026-08-07）：mj327_task5 健康物理失败判读（Rick 判读）
+
+**逐集账**（服务器 `eval_info.json` 核对）：task5 @3.2.7 共 **10 败** = ep 0, 1, 9, 18, 24, 32, 37, 38, 39, 44。有录像的仅 ep0–9（默认每任务录前 10 集），其中失败 **3 集 = ep0、ep1、ep9**——即 `mj327_task5/` 里可判读的全部失败；**其余 7 败（ep18/24/32/37/38/39/44）无录像、未判读**。
+
+**Rick 判读（3 段全看）**：2 集抓取失败（没把碗抓起来）+ 1 集放置偏远（碗放在盘子边上判负）。逐集对应（ep0/ep1/ep9 各属哪类）待 Rick 补充。
+
+**意义**：健康物理下 task5 的已判读失败全属接触几何（抓取/放置），无拿错碗，与 t9 全失败判读（8 抓取 + 1 放置）同谱。判读覆盖 3/10；如需收口，可按 t9 的做法（`EVAL_RENDER_ALL_N` 全录像重跑）补齐其余 7 败的录像。
