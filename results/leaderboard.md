@@ -46,9 +46,12 @@ Two findings that don't fit in one scalar:
   not tuned by us.
 - Eval stack: SmolVLA and π0.5 run in lerobot 0.6.0 (sync vector env, batch 1, seed 1000);
   OFT runs in its official repo environment (`cudnn.deterministic=True`).
-- Episode cap: 280 steps (lerobot stack) vs 220 + 10 settle steps (OFT official).
-  The asymmetry favors the lerobot-stack models if anything; OFT leads despite the shorter
-  budget.
+- Episode cap: 280 policy steps (lerobot stack) vs 220 (OFT official). Both stacks run
+  the same 10 no-op physics-settling steps after `set_init_state`: lerobot inside
+  `env.reset()` (`num_steps_wait=10` in `lerobot/envs/libero.py`, not counted in the 280),
+  OFT explicitly in its eval loop (booked as 220 + 10). The settle phase is symmetric;
+  the only asymmetry is the 280 vs 220 budget, which favors the lerobot-stack models if
+  anything — OFT leads despite the shorter budget.
 - SmolVLA has no official LIBERO-Spatial checkpoint; its row is our paper-aligned finetune
   (global batch 64, 30k steps). All other rows are unmodified released checkpoints.
 
@@ -164,7 +167,7 @@ monotonically fix everything:**
   failures has no observable intermediate anywhere in this stack, which is why the
   mechanism had to be established behaviorally (video + failure-set overlap) rather
   than by reading an internal variable.
-- The two eval stacks differ beyond inference configs (episode caps 280 vs 220+10,
+- The two eval stacks differ beyond inference configs (policy-step budgets 280 vs 220,
   env library versions); we kept each model's official stack by design and disclose
   rather than normalize.
 - Suites Object / Goal / Long and GR00T are not yet included.
