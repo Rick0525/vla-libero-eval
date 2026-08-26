@@ -1,5 +1,7 @@
 # SmolVLA Fine-tuning on LIBERO-Spatial — Report
 
+> **Status (2026-08): historical record.** Written at the end of W1 (2026-07-20; annotation verdict added 07-24). It covers both training runs — the docs-example attempt (43%) and the paper-aligned retrain (82.0% @ n=100). The checkpoint was **never retrained again**; what changed later is the evaluation: the same 30k checkpoint, re-scored at **n=500 under MuJoCo 3.2.7** (2026-08-05), gives **87.4%** — the number in the [leaderboard](leaderboard_zh.md) ([EN](leaderboard.md)). Per-task numbers below come from the 07-20 run under an older, unrecorded MuJoCo version; task 5 in particular is physics-version-sensitive (2/10 below vs 40/50 under 3.2.7 — see the leaderboard's version-sensitivity section). The recipe, the 43%→82% diagnosis, and the failure annotation stand as recorded.
+
 **Headline: 82.0% success rate** on LIBERO-Spatial (official protocol: `n_action_steps=1`, 10 tasks × 10 episodes, seed 1000), trained in 4h02m on 2×A800. Paper reference for SmolVLA-0.45B: 90.
 
 ## Setup
@@ -45,7 +47,7 @@ The curve plateaus after ~15k steps, consistent with 7 epochs over 1,693 traject
 
 We report **30k / 82.0%** as the headline. Reporting 25k's 84% would incur winner's-curse bias — using the same evaluation for both checkpoint selection and reporting inflates the winner's score; it would only be reportable after re-evaluation with fresh seeds.
 
-**Gap to the paper's 90**: not statistically resolvable at n=100 (the CI's upper edge is 89.5). A verdict either way needs ≥400 episodes (±3.8pp) plus item-by-item protocol alignment. Open.
+**Gap to the paper's 90**: not statistically resolvable at n=100 (the CI's upper edge is 89.5). A verdict either way needs ≥400 episodes (±3.8pp) plus item-by-item protocol alignment. *Resolved 2026-08-05: re-evaluated at n=500 under MuJoCo 3.2.7 → 87.4%; the gap is not significant (z=0.73, p=0.47). See the [leaderboard](leaderboard.md).*
 
 ## Per-task results (ckpt 30k)
 
@@ -95,4 +97,4 @@ All 12 failure episodes annotated (task5: 8, task8: 4; successes kept as control
 
 - Train and eval seed: 1000. Eval seeds are assigned per episode index, independent of `--eval.batch_size` — batch settings do not change the evaluated initial states.
 - `--eval.batch_size` yields no speedup on LIBERO (environments step serially); `--env.max_parallel_tasks` must stay 1 (the implementation shares one stateful policy object across a thread pool).
-- Two machine-specific workarounds (NCCL P2P disabled; TorchDynamo disabled globally — lerobot's SmolVLA hardcodes an internal `torch.compile` not governed by `--policy.compile_model`) are documented inline in `scripts/train_smolvla_spatial_b64.sh`.
+- Two machine-specific workarounds were needed for these W1 runs (NCCL P2P disabled; TorchDynamo disabled globally — lerobot's SmolVLA hardcodes an internal `torch.compile` not governed by `--policy.compile_model`). Both were removed in W2 after a host IOMMU setting fix restored inter-GPU P2P; `scripts/train_smolvla_spatial_b64.sh` reflects the current settings.

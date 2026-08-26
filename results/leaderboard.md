@@ -111,7 +111,7 @@ One more caveat: overlap is only informative for policies that **re-sample actio
 
 | Mechanism \ Model | SmolVLA 0.45B | π0.5 ~3.3B | OFT 7.5B |
 |---|---|---|---|
-| **Contact geometry** (grasp / transport / placement) | All reviewed failures belong here (12/63 covered) | Largely resolved (t5: 45/50); residuals are same family | Primary source, but rare (no task below 46/50) |
+| **Contact geometry** (grasp / transport / placement) | All reviewed failures belong here (12/63 covered) | Low rate (t5: 45/50) | Primary source, but rare (no task below 46/50) |
 | **Referent confusion** | **Not observed** (t9 fully reviewed, zero confusion; t7 48/50 rules out systematic) | **Systematic paired confusion** (stove↔cabinet, 10+ layouts in t7/t9, locked under perturbation) | Single-layout isolate (combined arm, t5 layout #22) |
 
 Three readings:
