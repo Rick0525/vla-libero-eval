@@ -11,7 +11,7 @@ A unified evaluation of three VLA models (SmolVLA 0.45B / π0.5 3.3B / OpenVLA-O
 | Model | Params | Inference config (official) | Success (n=500) | 95% CI | Published ref |
 |---|---|---|---|---|---|
 | OpenVLA-OFT (specialist) | 7.5B | action chunk 8, open-loop | **97.4** (487/500) | [95.6, 98.5] | 97.6 (paper) |
-| OpenVLA-OFT (combined) | 7.5B | action chunk 8, open-loop | **97.4** (487/500) | [95.6, 98.5] | — |
+| OpenVLA-OFT (combined) | 7.5B | action chunk 8, open-loop | **97.4** (487/500) | [95.6, 98.5] | n/a |
 | π0.5 | ~3.3B | chunk 50, execute 10 | **94.4** (472/500) | [92.0, 96.1] | 97.0 @ n=100 |
 | SmolVLA (our finetune) | 0.45B | n_action_steps=1, re-plan every step | **87.4** (437/500) | [84.2, 90.0] | ~90 (paper) |
 
@@ -28,7 +28,7 @@ Failures were judged by watching the simulation videos (per-model coverage discl
 
 Key observations:
 
-- **Failure reproducibility is itself a diagnostic signal**: π0.5's stove ↔ cabinet confusion is a locked decision error — the same 10 task-7 layouts fail in two independently sampled runs (10/10 identical), and the model neatly places the *wrong* bowl on the plate. Failure-set overlap across re-runs separates "locked decision errors" from "millimeter contact luck."
+- **Failure reproducibility is itself a diagnostic signal**: π0.5's stove ↔ cabinet confusion is a locked decision error; the same 10 task-7 layouts fail in two independently sampled runs (10/10 identical), and the model neatly places the *wrong* bowl on the plate. Failure-set overlap across re-runs separates "locked decision errors" from "millimeter contact luck."
 - **Capacity lowers failure rates but does not eliminate mechanisms**: the off-center-grasp and double-bowl-grasp families show up at 0.45B and 7.5B alike; the systematic referential confusion was only observed in π0.5.
 
 Full analysis in the leaderboard's "Failure mechanisms" section; annotated video ledgers in `results/failure_videos/`.
@@ -37,7 +37,7 @@ Full analysis in the leaderboard's "Failure mechanisms" section; annotated video
 
 ### 1. A MuJoCo Bugfix Silently Rewrote the Benchmark
 
-LIBERO task 5's init states store the black bowl suspended ~11 cm above a ramekin — the layout's real semantics are outsourced to the physics engine during a 10-step settling window inside `reset()`. MuJoCo 3.4.0 fixed box-box collision distances, changing the bowl's settled pose and silently rewriting the exam (pictured below):
+LIBERO task 5's init states store the black bowl suspended ~11 cm above a ramekin; the layout's real semantics are outsourced to the physics engine during a 10-step settling window inside `reset()`. MuJoCo 3.4.0 fixed box-box collision distances, changing the bowl's settled pose and silently rewriting the exam (pictured below):
 
 - SmolVLA task 5: 80% → 28%
 - OFT-family checkpoint: 98% → 12% (sister RL post-training project)
@@ -51,7 +51,7 @@ A same-physics A/B (re-seated init, physics pinned) attributes the effect 100% t
 
 ### 2. A 46× Dataloader Slowdown
 
-`datasets` ≥ 4.4 added a custom-format gate that silently turned lerobot's delta-timestamp queries into whole-row reads — ~100 PNGs decoded per sample to fetch 50×7 floats. A cached column-view fix brings 200.7 → 4.4 ms/sample (46×), cutting a 30k-step training run from 4h02m to ~1.9h.
+`datasets` ≥ 4.4 added a custom-format gate that silently turned lerobot's delta-timestamp queries into whole-row reads: ~100 PNGs decoded per sample to fetch 50×7 floats. A cached column-view fix brings 200.7 → 4.4 ms/sample (46×), cutting a 30k-step training run from 4h02m to ~1.9h.
 
 **Reported upstream**: [lerobot#2895](https://github.com/huggingface/lerobot/issues/2895), acknowledged by the Hugging Face `datasets` maintainer; patch and tests in `patches/`
 
@@ -62,7 +62,7 @@ Same weights, same config (md5-checked), same seeds: re-running each OFT checkpo
 1. **EGL offscreen rendering**: the first divergence lands on camera images in 50/50 episodes, while the physics state is still bit-identical
 2. **Cross-episode positional effects**: an episode's outcome depends on its position in the 500-episode sequence (MuJoCo warmstart cache and global RNG stream position; both causally verified by intervention)
 
-Practical takeaway: any change to how the evaluation is executed — episode position (in-sequence vs standalone), warmstart handling, RNG stream position, even upstream bugfixes — flips a different batch of edge layouts, so per-task LIBERO numbers inherently wobble by a few episodes. On task 7, the one task probed exhaustively, a cumulative 7/50 = 14% of layouts have flipped outcome under some perturbation.
+Practical takeaway: any change to how the evaluation is executed (episode position in-sequence vs standalone, warmstart handling, RNG stream position, even upstream bugfixes) flips a different batch of edge layouts, so per-task LIBERO numbers inherently wobble by a few episodes. On task 7, the one task probed exhaustively, a cumulative 7/50 = 14% of layouts have flipped outcome under some perturbation.
 
 **Full case file**: [results/oft_nondeterminism_case_zh.md](results/oft_nondeterminism_case_zh.md)
 
